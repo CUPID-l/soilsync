@@ -35,33 +35,177 @@ type FormData = {
 }
 
 export default function ManualEntry() {
-  const { register, handleSubmit, watch } = useForm<FormData>()
+  const { register, handleSubmit, watch } = useForm<FormData>({
+    defaultValues: {
+      topsoil: {
+        temperature: 25,
+        moisture: 50,
+        ph: 7,
+        nitrogen: 5,
+        phosphorus: 5,
+        potassium: 5
+      },
+      subsoil: {
+        temperature: 25,
+        moisture: 50,
+        ph: 7,
+        nitrogen: 5,
+        phosphorus: 5,
+        potassium: 5
+      },
+      deepsoil: {
+        temperature: 25,
+        moisture: 50,
+        ph: 7,
+        nitrogen: 5,
+        phosphorus: 5,
+        potassium: 5
+      },
+      soil_type: 0,
+      crop_type: 0
+    }
+  })
   const [prediction, setPrediction] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const onSubmit = async (data: FormData) => {
     setLoading(true)
+    setError(null)
     try {
+      // Format the data according to the API requirements
+      const formattedData = {
+        topsoil: [
+          data.topsoil.temperature,
+          data.topsoil.moisture,
+          data.topsoil.ph,
+          data.topsoil.nitrogen,
+          data.topsoil.phosphorus,
+          data.topsoil.potassium
+        ],
+        subsoil: [
+          data.subsoil.temperature,
+          data.subsoil.moisture,
+          data.subsoil.ph,
+          data.subsoil.nitrogen,
+          data.subsoil.phosphorus,
+          data.subsoil.potassium
+        ],
+        deepsoil: [
+          data.deepsoil.temperature,
+          data.deepsoil.moisture,
+          data.deepsoil.ph,
+          data.deepsoil.nitrogen,
+          data.deepsoil.phosphorus,
+          data.deepsoil.potassium
+        ],
+        soil_type: data.soil_type,
+        crop_type: data.crop_type
+      }
+
       const response = await fetch(process.env.NEXT_PUBLIC_HF_API_URL!, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${process.env.NEXT_PUBLIC_HF_API_TOKEN}`
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(formattedData)
       })
 
-      if (!response.ok) throw new Error('Prediction failed')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Prediction failed')
+      }
       
       const result = await response.json()
       setPrediction(result.fertilizer)
     } catch (error) {
       console.error('Error:', error)
-      alert('Failed to get prediction. Please try again.')
+      setError(error instanceof Error ? error.message : 'Failed to get prediction. Please try again.')
     } finally {
       setLoading(false)
     }
   }
+
+  const renderSoilInputs = (prefix: 'topsoil' | 'subsoil' | 'deepsoil', title: string) => (
+    <div className="bg-dark-700 p-6 rounded-xl">
+      <h2 className="text-2xl font-semibold mb-6">{title}</h2>
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <label className="block mb-2">Temperature (°C)</label>
+          <input
+            type="range"
+            min="0"
+            max="50"
+            step="0.1"
+            {...register(`${prefix}.temperature`)}
+            className="w-full"
+          />
+          <span className="text-primary-500">{watch(`${prefix}.temperature`)}°C</span>
+        </div>
+        <div>
+          <label className="block mb-2">Moisture (%)</label>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            step="0.1"
+            {...register(`${prefix}.moisture`)}
+            className="w-full"
+          />
+          <span className="text-primary-500">{watch(`${prefix}.moisture`)}%</span>
+        </div>
+        <div>
+          <label className="block mb-2">pH</label>
+          <input
+            type="range"
+            min="0"
+            max="14"
+            step="0.1"
+            {...register(`${prefix}.ph`)}
+            className="w-full"
+          />
+          <span className="text-primary-500">{watch(`${prefix}.ph`)}</span>
+        </div>
+        <div>
+          <label className="block mb-2">Nitrogen (mg/kg)</label>
+          <input
+            type="range"
+            min="0"
+            max="10"
+            step="0.1"
+            {...register(`${prefix}.nitrogen`)}
+            className="w-full"
+          />
+          <span className="text-primary-500">{watch(`${prefix}.nitrogen`)} mg/kg</span>
+        </div>
+        <div>
+          <label className="block mb-2">Phosphorus (mg/kg)</label>
+          <input
+            type="range"
+            min="0"
+            max="10"
+            step="0.1"
+            {...register(`${prefix}.phosphorus`)}
+            className="w-full"
+          />
+          <span className="text-primary-500">{watch(`${prefix}.phosphorus`)} mg/kg</span>
+        </div>
+        <div>
+          <label className="block mb-2">Potassium (mg/kg)</label>
+          <input
+            type="range"
+            min="0"
+            max="10"
+            step="0.1"
+            {...register(`${prefix}.potassium`)}
+            className="w-full"
+          />
+          <span className="text-primary-500">{watch(`${prefix}.potassium`)} mg/kg</span>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <main className="min-h-screen py-12">
@@ -77,100 +221,9 @@ export default function ManualEntry() {
         <h1 className="text-4xl font-bold mb-8">Manual Data Entry</h1>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* Topsoil Section */}
-          <div className="bg-dark-700 p-6 rounded-xl">
-            <h2 className="text-2xl font-semibold mb-6">Topsoil Data</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block mb-2">Temperature (°C)</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="50"
-                  step="0.1"
-                  {...register('topsoil.temperature')}
-                  className="w-full"
-                />
-                <span className="text-primary-500">{watch('topsoil.temperature') || 25}°C</span>
-              </div>
-              <div>
-                <label className="block mb-2">Moisture (%)</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  {...register('topsoil.moisture')}
-                  className="w-full"
-                />
-                <span className="text-primary-500">{watch('topsoil.moisture') || 50}%</span>
-              </div>
-              <div>
-                <label className="block mb-2">pH</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="14"
-                  step="0.1"
-                  {...register('topsoil.ph')}
-                  className="w-full"
-                />
-                <span className="text-primary-500">{watch('topsoil.ph') || 7}</span>
-              </div>
-              <div>
-                <label className="block mb-2">Nitrogen (mg/kg)</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  {...register('topsoil.nitrogen')}
-                  className="w-full"
-                />
-                <span className="text-primary-500">{watch('topsoil.nitrogen') || 5} mg/kg</span>
-              </div>
-              <div>
-                <label className="block mb-2">Phosphorus (mg/kg)</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  {...register('topsoil.phosphorus')}
-                  className="w-full"
-                />
-                <span className="text-primary-500">{watch('topsoil.phosphorus') || 5} mg/kg</span>
-              </div>
-              <div>
-                <label className="block mb-2">Potassium (mg/kg)</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  {...register('topsoil.potassium')}
-                  className="w-full"
-                />
-                <span className="text-primary-500">{watch('topsoil.potassium') || 5} mg/kg</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Subsoil Section */}
-          <div className="bg-dark-700 p-6 rounded-xl">
-            <h2 className="text-2xl font-semibold mb-6">Subsoil Data</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Similar inputs as topsoil */}
-            </div>
-          </div>
-
-          {/* Deepsoil Section */}
-          <div className="bg-dark-700 p-6 rounded-xl">
-            <h2 className="text-2xl font-semibold mb-6">Deepsoil Data</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Similar inputs as topsoil */}
-            </div>
-          </div>
+          {renderSoilInputs('topsoil', 'Topsoil Data')}
+          {renderSoilInputs('subsoil', 'Subsoil Data')}
+          {renderSoilInputs('deepsoil', 'Deepsoil Data')}
 
           {/* Soil and Crop Type */}
           <div className="bg-dark-700 p-6 rounded-xl">
@@ -212,6 +265,13 @@ export default function ManualEntry() {
             {loading ? 'Predicting...' : 'Get Prediction'}
           </button>
         </form>
+
+        {error && (
+          <div className="mt-8 bg-red-900/50 p-6 rounded-xl">
+            <h2 className="text-2xl font-semibold mb-4 text-red-400">Error</h2>
+            <p className="text-red-300">{error}</p>
+          </div>
+        )}
 
         {prediction && (
           <div className="mt-8 bg-dark-700 p-6 rounded-xl">
