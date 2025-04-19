@@ -1,21 +1,13 @@
 import { NextResponse } from 'next/server'
-import admin from 'firebase-admin'
-
-// Initialize Firebase Admin
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-    databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`
-  })
-}
+import { firebaseAdmin } from '@/lib/firebase-admin'
 
 export async function GET() {
   try {
-    const db = admin.database()
+    if (!firebaseAdmin) {
+      throw new Error('Firebase Admin not initialized')
+    }
+
+    const db = firebaseAdmin.database()
     const ref = db.ref('sensors')
     const snapshot = await ref.once('value')
     const data = snapshot.val()
