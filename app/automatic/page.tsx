@@ -31,8 +31,18 @@ interface SensorData {
   timestamp: number
 }
 
+interface SoilLayers {
+  top_layer: SensorData | null
+  mid_layer: SensorData | null
+  bottom_layer: SensorData | null
+}
+
 export default function AutomaticReport() {
-  const [sensorData, setSensorData] = useState<SensorData | null>(null)
+  const [soilLayers, setSoilLayers] = useState<SoilLayers>({
+    top_layer: null,
+    mid_layer: null,
+    bottom_layer: null
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [report, setReport] = useState<string | null>(null)
@@ -49,38 +59,70 @@ export default function AutomaticReport() {
         }
 
         setFirebaseInitialized(true)
-        console.log('Firebase initialized, setting up Firestore listener')
+        console.log('Firebase initialized, setting up Firestore listeners')
 
-        const sensorRef = collection(db, 'sensors')
-        console.log('Setting up Firestore listener for sensors collection')
+        // Set up listeners for all three layers
+        const topLayerRef = collection(db, 'top_layer')
+        const midLayerRef = collection(db, 'mid_layer')
+        const bottomLayerRef = collection(db, 'bottom_layer')
+
+        console.log('Setting up Firestore listeners for all soil layers')
         
-        const unsubscribe = onSnapshot(sensorRef, 
+        const unsubscribeTop = onSnapshot(topLayerRef, 
           (snapshot) => {
-            console.log('Received Firestore snapshot:', snapshot.docs.length, 'documents')
+            console.log('Received top layer snapshot:', snapshot.docs.length, 'documents')
             const data = snapshot.docs.map(doc => doc.data() as SensorData)
             if (data.length > 0) {
-              console.log('Setting sensor data:', data[0])
-              setSensorData(data[0])
-              setError(null)
-            } else {
-              console.log('No sensor data available')
-              setError('No sensor data available. Please check if sensors are connected.')
+              console.log('Setting top layer data:', data[0])
+              setSoilLayers(prev => ({ ...prev, top_layer: data[0] }))
             }
-            setLoading(false)
           },
           (error) => {
-            console.error('Firestore error:', error)
-            setError('Failed to fetch sensor data. Please try again later.')
-            setLoading(false)
+            console.error('Top layer Firestore error:', error)
+            setError('Failed to fetch top layer data. Please try again later.')
           }
         )
 
+        const unsubscribeMid = onSnapshot(midLayerRef, 
+          (snapshot) => {
+            console.log('Received mid layer snapshot:', snapshot.docs.length, 'documents')
+            const data = snapshot.docs.map(doc => doc.data() as SensorData)
+            if (data.length > 0) {
+              console.log('Setting mid layer data:', data[0])
+              setSoilLayers(prev => ({ ...prev, mid_layer: data[0] }))
+            }
+          },
+          (error) => {
+            console.error('Mid layer Firestore error:', error)
+            setError('Failed to fetch mid layer data. Please try again later.')
+          }
+        )
+
+        const unsubscribeBottom = onSnapshot(bottomLayerRef, 
+          (snapshot) => {
+            console.log('Received bottom layer snapshot:', snapshot.docs.length, 'documents')
+            const data = snapshot.docs.map(doc => doc.data() as SensorData)
+            if (data.length > 0) {
+              console.log('Setting bottom layer data:', data[0])
+              setSoilLayers(prev => ({ ...prev, bottom_layer: data[0] }))
+            }
+          },
+          (error) => {
+            console.error('Bottom layer Firestore error:', error)
+            setError('Failed to fetch bottom layer data. Please try again later.')
+          }
+        )
+
+        setLoading(false)
+
         return () => {
-          console.log('Cleaning up Firestore listener')
-          unsubscribe()
+          console.log('Cleaning up Firestore listeners')
+          unsubscribeTop()
+          unsubscribeMid()
+          unsubscribeBottom()
         }
       } catch (error) {
-        console.error('Error setting up Firestore listener:', error)
+        console.error('Error setting up Firestore listeners:', error)
         setError('Failed to connect to database. Please try again later.')
         setLoading(false)
       }
@@ -90,8 +132,8 @@ export default function AutomaticReport() {
   }, [])
 
   const handleGenerateReport = async () => {
-    if (!sensorData) {
-      setError('No sensor data available')
+    if (!soilLayers.top_layer || !soilLayers.mid_layer || !soilLayers.bottom_layer) {
+      setError('Missing data from one or more soil layers')
       return
     }
 
@@ -105,32 +147,46 @@ export default function AutomaticReport() {
       setError(null)
 
       const prediction = await getPrediction({
-        temperature: sensorData.temperature,
-        humidity: sensorData.humidity,
-        moisture: sensorData.moisture,
-        ph: sensorData.ph,
-        nitrogen: sensorData.nitrogen,
-        phosphorus: sensorData.phosphorus,
-        potassium: sensorData.potassium
+        top_layer: soilLayers.top_layer,
+        mid_layer: soilLayers.mid_layer,
+        bottom_layer: soilLayers.bottom_layer
       })
 
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
       
-      const prompt = `Based on the following soil sensor readings and recommended fertilizer, generate a detailed report:
+      const prompt = `Based on the following soil sensor readings from three layers and recommended fertilizer, generate a detailed report:
       
-      Soil Data:
-      - Temperature: ${sensorData.temperature}°C
-      - Humidity: ${sensorData.humidity}%
-      - Moisture: ${sensorData.moisture}%
-      - pH: ${sensorData.ph}
-      - Nitrogen: ${sensorData.nitrogen} ppm
-      - Phosphorus: ${sensorData.phosphorus} ppm
-      - Potassium: ${sensorData.potassium} ppm
+      Top Layer Data:
+      - Temperature: ${soilLayers.top_layer.temperature}°C
+      - Humidity: ${soilLayers.top_layer.humidity}%
+      - Moisture: ${soilLayers.top_layer.moisture}%
+      - pH: ${soilLayers.top_layer.ph}
+      - Nitrogen: ${soilLayers.top_layer.nitrogen} ppm
+      - Phosphorus: ${soilLayers.top_layer.phosphorus} ppm
+      - Potassium: ${soilLayers.top_layer.potassium} ppm
+      
+      Middle Layer Data:
+      - Temperature: ${soilLayers.mid_layer.temperature}°C
+      - Humidity: ${soilLayers.mid_layer.humidity}%
+      - Moisture: ${soilLayers.mid_layer.moisture}%
+      - pH: ${soilLayers.mid_layer.ph}
+      - Nitrogen: ${soilLayers.mid_layer.nitrogen} ppm
+      - Phosphorus: ${soilLayers.mid_layer.phosphorus} ppm
+      - Potassium: ${soilLayers.mid_layer.potassium} ppm
+      
+      Bottom Layer Data:
+      - Temperature: ${soilLayers.bottom_layer.temperature}°C
+      - Humidity: ${soilLayers.bottom_layer.humidity}%
+      - Moisture: ${soilLayers.bottom_layer.moisture}%
+      - pH: ${soilLayers.bottom_layer.ph}
+      - Nitrogen: ${soilLayers.bottom_layer.nitrogen} ppm
+      - Phosphorus: ${soilLayers.bottom_layer.phosphorus} ppm
+      - Potassium: ${soilLayers.bottom_layer.potassium} ppm
       
       Recommended Fertilizer: ${prediction}
       
       Please provide a comprehensive report including:
-      1. Current Soil Conditions Analysis
+      1. Current Soil Conditions Analysis (for each layer)
       2. Fertilizer Explanation
       3. Specific Actions to Take
       4. Implementation Timeline
@@ -168,42 +224,126 @@ export default function AutomaticReport() {
           </div>
         )}
 
-        {sensorData && (
+        {soilLayers.top_layer && (
           <div className="bg-gray-800 p-6 rounded-lg mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Current Sensor Data</h2>
+            <h2 className="text-2xl font-semibold mb-4">Top Layer Data</h2>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-gray-400">Temperature</p>
-                <p className="text-xl">{sensorData.temperature}°C</p>
+                <p className="text-xl">{soilLayers.top_layer.temperature}°C</p>
               </div>
               <div>
                 <p className="text-gray-400">Humidity</p>
-                <p className="text-xl">{sensorData.humidity}%</p>
+                <p className="text-xl">{soilLayers.top_layer.humidity}%</p>
               </div>
               <div>
                 <p className="text-gray-400">Moisture</p>
-                <p className="text-xl">{sensorData.moisture}%</p>
+                <p className="text-xl">{soilLayers.top_layer.moisture}%</p>
               </div>
               <div>
                 <p className="text-gray-400">pH</p>
-                <p className="text-xl">{sensorData.ph}</p>
+                <p className="text-xl">{soilLayers.top_layer.ph}</p>
               </div>
               <div>
                 <p className="text-gray-400">Nitrogen</p>
-                <p className="text-xl">{sensorData.nitrogen} ppm</p>
+                <p className="text-xl">{soilLayers.top_layer.nitrogen} ppm</p>
               </div>
               <div>
                 <p className="text-gray-400">Phosphorus</p>
-                <p className="text-xl">{sensorData.phosphorus} ppm</p>
+                <p className="text-xl">{soilLayers.top_layer.phosphorus} ppm</p>
               </div>
               <div>
                 <p className="text-gray-400">Potassium</p>
-                <p className="text-xl">{sensorData.potassium} ppm</p>
+                <p className="text-xl">{soilLayers.top_layer.potassium} ppm</p>
               </div>
               <div>
                 <p className="text-gray-400">Last Updated</p>
                 <p className="text-xl">
-                  {new Date(sensorData.timestamp).toLocaleString()}
+                  {new Date(soilLayers.top_layer.timestamp).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {soilLayers.mid_layer && (
+          <div className="bg-gray-800 p-6 rounded-lg mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Middle Layer Data</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-gray-400">Temperature</p>
+                <p className="text-xl">{soilLayers.mid_layer.temperature}°C</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Humidity</p>
+                <p className="text-xl">{soilLayers.mid_layer.humidity}%</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Moisture</p>
+                <p className="text-xl">{soilLayers.mid_layer.moisture}%</p>
+              </div>
+              <div>
+                <p className="text-gray-400">pH</p>
+                <p className="text-xl">{soilLayers.mid_layer.ph}</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Nitrogen</p>
+                <p className="text-xl">{soilLayers.mid_layer.nitrogen} ppm</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Phosphorus</p>
+                <p className="text-xl">{soilLayers.mid_layer.phosphorus} ppm</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Potassium</p>
+                <p className="text-xl">{soilLayers.mid_layer.potassium} ppm</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Last Updated</p>
+                <p className="text-xl">
+                  {new Date(soilLayers.mid_layer.timestamp).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {soilLayers.bottom_layer && (
+          <div className="bg-gray-800 p-6 rounded-lg mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Bottom Layer Data</h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-gray-400">Temperature</p>
+                <p className="text-xl">{soilLayers.bottom_layer.temperature}°C</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Humidity</p>
+                <p className="text-xl">{soilLayers.bottom_layer.humidity}%</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Moisture</p>
+                <p className="text-xl">{soilLayers.bottom_layer.moisture}%</p>
+              </div>
+              <div>
+                <p className="text-gray-400">pH</p>
+                <p className="text-xl">{soilLayers.bottom_layer.ph}</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Nitrogen</p>
+                <p className="text-xl">{soilLayers.bottom_layer.nitrogen} ppm</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Phosphorus</p>
+                <p className="text-xl">{soilLayers.bottom_layer.phosphorus} ppm</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Potassium</p>
+                <p className="text-xl">{soilLayers.bottom_layer.potassium} ppm</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Last Updated</p>
+                <p className="text-xl">
+                  {new Date(soilLayers.bottom_layer.timestamp).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -212,7 +352,7 @@ export default function AutomaticReport() {
 
         <button
           onClick={handleGenerateReport}
-          disabled={!sensorData || loading || !genAI}
+          disabled={!soilLayers.top_layer || !soilLayers.mid_layer || !soilLayers.bottom_layer || loading || !genAI}
           className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-8 disabled:opacity-50"
         >
           Generate Report
