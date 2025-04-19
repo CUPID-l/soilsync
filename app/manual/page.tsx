@@ -78,7 +78,7 @@ export default function ManualEntry() {
     setLoading(true)
     setError(null)
     try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" })
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
       
       const prompt = `Based on the following soil sensor data and fertilizer prediction, provide a comprehensive analysis and recommendations:
 
