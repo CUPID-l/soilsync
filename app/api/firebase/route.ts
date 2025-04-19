@@ -7,14 +7,17 @@ export async function GET() {
       throw new Error('Firebase Admin not initialized')
     }
 
-    const db = firebaseAdmin.database()
-    const ref = db.ref('sensors')
-    const snapshot = await ref.once('value')
-    const data = snapshot.val()
-
-    if (!data) {
+    const db = firebaseAdmin.firestore()
+    const snapshot = await db.collection('sensors').get()
+    
+    if (snapshot.empty) {
       return NextResponse.json({ error: 'No data found' }, { status: 404 })
     }
+
+    const data = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
 
     return NextResponse.json(data)
   } catch (error) {

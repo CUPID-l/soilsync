@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app'
-import { getDatabase, Database } from 'firebase/database'
+import { getFirestore, Firestore } from 'firebase/firestore'
 import { getAuth, Auth } from 'firebase/auth'
 
 const firebaseConfig = {
@@ -8,19 +8,18 @@ const firebaseConfig = {
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com`
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 }
 
 // Initialize Firebase only on the client side
 let app: FirebaseApp | undefined
-let database: Database | undefined
+let db: Firestore | undefined
 let auth: Auth | undefined
 
 if (typeof window !== 'undefined') {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
-  database = getDatabase(app)
+  db = getFirestore(app)
   auth = getAuth(app)
 }
 
-export { app, database, auth } 
+export { app, db, auth } 

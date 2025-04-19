@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { FaArrowLeft, FaChartLine, FaFileAlt } from 'react-icons/fa'
 import Link from 'next/link'
-import { database } from '@/lib/firebase'
-import { ref, onValue } from 'firebase/database'
+import { db } from '@/lib/firebase'
+import { collection, onSnapshot } from 'firebase/firestore'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getPrediction } from '@/lib/prediction'
 import { generateReport } from '@/lib/report'
@@ -30,17 +30,17 @@ export default function AutomaticReport() {
   const [report, setReport] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!database) {
+    if (!db) {
       setError('Firebase is not initialized')
       setLoading(false)
       return
     }
 
-    const sensorRef = ref(database, 'sensor_data')
-    const unsubscribe = onValue(sensorRef, (snapshot) => {
-      const data = snapshot.val()
-      if (data) {
-        setSensorData(data)
+    const sensorRef = collection(db, 'sensors')
+    const unsubscribe = onSnapshot(sensorRef, (snapshot) => {
+      const data = snapshot.docs.map(doc => doc.data() as SensorData)
+      if (data.length > 0) {
+        setSensorData(data[0])
         setError(null)
       } else {
         setError('No sensor data available')

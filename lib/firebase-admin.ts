@@ -16,8 +16,7 @@ function getFirebaseAdmin() {
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: privateKey.replace(/\\n/g, '\n'),
-      }),
-      databaseURL: `https://${process.env.FIREBASE_PROJECT_ID}.firebaseio.com`
+      })
     })
   } catch (error) {
     console.error('Firebase Admin initialization error:', error)
