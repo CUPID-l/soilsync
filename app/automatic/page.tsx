@@ -39,51 +39,54 @@ export default function AutomaticReport() {
   const [firebaseInitialized, setFirebaseInitialized] = useState(false)
 
   useEffect(() => {
-    // Check Firebase initialization
-    if (!db) {
-      console.error('Firebase not initialized')
-      setError('Firebase is not initialized. Please check your Firebase configuration.')
-      setLoading(false)
-      return
-    }
-
-    setFirebaseInitialized(true)
-    console.log('Firebase initialized, setting up Firestore listener')
-
-    try {
-      const sensorRef = collection(db, 'sensors')
-      console.log('Setting up Firestore listener for sensors collection')
-      
-      const unsubscribe = onSnapshot(sensorRef, 
-        (snapshot) => {
-          console.log('Received Firestore snapshot:', snapshot.docs.length, 'documents')
-          const data = snapshot.docs.map(doc => doc.data() as SensorData)
-          if (data.length > 0) {
-            console.log('Setting sensor data:', data[0])
-            setSensorData(data[0])
-            setError(null)
-          } else {
-            console.log('No sensor data available')
-            setError('No sensor data available. Please check if sensors are connected.')
-          }
+    const initializeFirebase = async () => {
+      try {
+        if (!db) {
+          console.error('Firebase not initialized')
+          setError('Firebase is not initialized. Please check your Firebase configuration.')
           setLoading(false)
-        },
-        (error) => {
-          console.error('Firestore error:', error)
-          setError('Failed to fetch sensor data. Please try again later.')
-          setLoading(false)
+          return
         }
-      )
 
-      return () => {
-        console.log('Cleaning up Firestore listener')
-        unsubscribe()
+        setFirebaseInitialized(true)
+        console.log('Firebase initialized, setting up Firestore listener')
+
+        const sensorRef = collection(db, 'sensors')
+        console.log('Setting up Firestore listener for sensors collection')
+        
+        const unsubscribe = onSnapshot(sensorRef, 
+          (snapshot) => {
+            console.log('Received Firestore snapshot:', snapshot.docs.length, 'documents')
+            const data = snapshot.docs.map(doc => doc.data() as SensorData)
+            if (data.length > 0) {
+              console.log('Setting sensor data:', data[0])
+              setSensorData(data[0])
+              setError(null)
+            } else {
+              console.log('No sensor data available')
+              setError('No sensor data available. Please check if sensors are connected.')
+            }
+            setLoading(false)
+          },
+          (error) => {
+            console.error('Firestore error:', error)
+            setError('Failed to fetch sensor data. Please try again later.')
+            setLoading(false)
+          }
+        )
+
+        return () => {
+          console.log('Cleaning up Firestore listener')
+          unsubscribe()
+        }
+      } catch (error) {
+        console.error('Error setting up Firestore listener:', error)
+        setError('Failed to connect to database. Please try again later.')
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('Error setting up Firestore listener:', error)
-      setError('Failed to connect to database. Please try again later.')
-      setLoading(false)
     }
+
+    initializeFirebase()
   }, [])
 
   const handleGenerateReport = async () => {
