@@ -4,12 +4,10 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { FaArrowLeft, FaFileAlt } from 'react-icons/fa'
 import Link from 'next/link'
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 // Initialize Gemini
-const ai = new GoogleGenAI({
-  apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
-})
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!)
 
 type FormData = {
   topsoil: {
@@ -80,10 +78,7 @@ export default function ManualEntry() {
     setLoading(true)
     setError(null)
     try {
-      const model = 'gemini-2.5-pro-preview-03-25'
-      const config = {
-        responseMimeType: 'text/plain',
-      }
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" })
       
       const prompt = `Based on the following soil sensor data and fertilizer prediction, provide a comprehensive analysis and recommendations:
 
@@ -123,29 +118,9 @@ Please provide:
 4. Timeline for implementation
 5. Expected outcomes`
 
-      const contents = [
-        {
-          role: 'user',
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
-        },
-      ]
-
-      const response = await ai.models.generateContentStream({
-        model,
-        config,
-        contents,
-      })
-
-      let fullResponse = ''
-      for await (const chunk of response) {
-        fullResponse += chunk.text
-      }
-      
-      setReport(fullResponse)
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+      setReport(response.text())
     } catch (error) {
       console.error('Error:', error)
       setError(error instanceof Error ? error.message : 'Failed to generate report. Please try again.')
