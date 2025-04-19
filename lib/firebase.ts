@@ -12,9 +12,15 @@ const firebaseConfig = {
   databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com`
 }
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
-const database = getDatabase(app)
-const auth = getAuth(app)
+// Initialize Firebase only on the client side
+let app
+let database
+let auth
+
+if (typeof window !== 'undefined') {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp()
+  database = getDatabase(app)
+  auth = getAuth(app)
+}
 
 export { app, database, auth } 

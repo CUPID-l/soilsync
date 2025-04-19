@@ -18,6 +18,11 @@ export default function AutomaticReport() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!database) {
+      setError('Firebase is not initialized. Please refresh the page.')
+      return
+    }
+
     const sensorRef = ref(database, 'sensors')
     const unsubscribe = onValue(sensorRef, 
       (snapshot) => {
