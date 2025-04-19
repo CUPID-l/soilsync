@@ -74,7 +74,7 @@ export default function AutomaticReport() {
         potassium: sensorData.potassium
       })
 
-      const report = await generateReport(prediction)
+      const report = await generateReport(sensorData, prediction)
       setReport(report)
     } catch (error) {
       setError('Failed to generate report')
