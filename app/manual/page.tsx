@@ -351,26 +351,73 @@ Please provide:
             </div>
             <div className="prose prose-invert max-w-none">
               {report.split('\n').map((paragraph, index) => {
-                // Check if the paragraph is a numbered list item
-                if (paragraph.match(/^\d+\./)) {
+                // Skip empty lines
+                if (!paragraph.trim()) return null
+
+                // Handle main title
+                if (paragraph.startsWith('## ')) {
                   return (
-                    <div key={index} className="mb-4">
-                      <h3 className="text-xl font-semibold text-primary-400 mb-2">
-                        {paragraph.split('.')[0]}. {paragraph.split('.')[1].trim()}
-                      </h3>
-                      <div className="ml-6 text-gray-300">
-                        {report.split('\n').slice(index + 1).find(p => p.match(/^\d+\./)) 
-                          ? report.split('\n').slice(index + 1).find(p => p.match(/^\d+\./)) 
-                          : report.split('\n').slice(index + 1).join('\n')}
-                      </div>
+                    <h1 key={index} className="text-3xl font-bold text-primary-400 mb-6">
+                      {paragraph.replace('## ', '')}
+                    </h1>
+                  )
+                }
+
+                // Handle section titles
+                if (paragraph.startsWith('**')) {
+                  const title = paragraph.replace(/\*\*/g, '')
+                  return (
+                    <h2 key={index} className="text-2xl font-semibold text-primary-400 mt-8 mb-4">
+                      {title}
+                    </h2>
+                  )
+                }
+
+                // Handle bullet points
+                if (paragraph.startsWith('* ')) {
+                  return (
+                    <li key={index} className="ml-6 text-gray-300 mb-2 list-disc">
+                      {paragraph.replace('* ', '')}
+                    </li>
+                  )
+                }
+
+                // Handle timeline items
+                if (paragraph.startsWith('* **')) {
+                  const [time, content] = paragraph.replace('* **', '').split(':**')
+                  return (
+                    <div key={index} className="ml-6 mb-4">
+                      <span className="font-semibold text-primary-400">{time}:</span>
+                      <span className="text-gray-300 ml-2">{content}</span>
                     </div>
                   )
                 }
-                // Skip empty lines
-                if (!paragraph.trim()) return null
+
+                // Handle expected outcomes
+                if (paragraph.startsWith('* **')) {
+                  const content = paragraph.replace('* **', '').replace('**', '')
+                  return (
+                    <li key={index} className="ml-6 text-gray-300 mb-2 list-disc">
+                      {content}
+                    </li>
+                  )
+                }
+
+                // Handle disclaimer
+                if (paragraph.startsWith('**Disclaimer:**')) {
+                  return (
+                    <div key={index} className="mt-8 pt-4 border-t border-dark-500">
+                      <h3 className="text-lg font-semibold text-primary-400 mb-2">Disclaimer</h3>
+                      <p className="text-gray-300">
+                        {paragraph.replace('**Disclaimer:**', '')}
+                      </p>
+                    </div>
+                  )
+                }
+
                 // Regular paragraphs
                 return (
-                  <p key={index} className="mb-4 text-gray-300">
+                  <p key={index} className="text-gray-300 mb-4">
                     {paragraph}
                   </p>
                 )
