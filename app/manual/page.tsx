@@ -1,110 +1,167 @@
-"use client"
+'use client'
 
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { FaArrowLeft, FaRobot } from 'react-icons/fa'
+import { FaArrowLeft, FaFileAlt } from 'react-icons/fa'
 import Link from 'next/link'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY || "")
-
-interface SoilData {
-  topsoil: {
-    moisture: number
-    temperature: number
-    ph: number
-  }
-  subsoil: {
-    moisture: number
-    temperature: number
-    ph: number
-  }
-  deepsoil: {
-    moisture: number
-    temperature: number
-    ph: number
-  }
-  soilType: string
-  cropType: string
-}
-
-interface PredictionResponse {
-  fertilizer: string
-  confidence: number
-}
+// Initialize Gemini
+const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!)
 
 type FormData = {
   topsoil: {
-    moisture: number
     temperature: number
+    moisture: number
     ph: number
+    nitrogen: number
+    phosphorus: number
+    potassium: number
   }
   subsoil: {
-    moisture: number
     temperature: number
+    moisture: number
     ph: number
+    nitrogen: number
+    phosphorus: number
+    potassium: number
   }
   deepsoil: {
-    moisture: number
     temperature: number
+    moisture: number
     ph: number
+    nitrogen: number
+    phosphorus: number
+    potassium: number
   }
-  soilType: string
-  cropType: string
+  soil_type: number
+  crop_type: number
 }
 
 export default function ManualEntry() {
   const { register, handleSubmit, watch } = useForm<FormData>({
     defaultValues: {
       topsoil: {
-        moisture: 50,
         temperature: 25,
-        ph: 7
+        moisture: 50,
+        ph: 7,
+        nitrogen: 5,
+        phosphorus: 5,
+        potassium: 5
       },
       subsoil: {
-        moisture: 50,
         temperature: 25,
-        ph: 7
+        moisture: 50,
+        ph: 7,
+        nitrogen: 5,
+        phosphorus: 5,
+        potassium: 5
       },
       deepsoil: {
-        moisture: 50,
         temperature: 25,
-        ph: 7
+        moisture: 50,
+        ph: 7,
+        nitrogen: 5,
+        phosphorus: 5,
+        potassium: 5
       },
-      soilType: 'Clayey',
-      cropType: 'Coconut'
+      soil_type: 0,
+      crop_type: 0
     }
   })
   const [prediction, setPrediction] = useState<string | null>(null)
+  const [report, setReport] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [report, setReport] = useState<string | null>(null)
-  const [generatingReport, setGeneratingReport] = useState(false)
+
+  const generateReport = async (data: FormData, fertilizer: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-pro" })
+      
+      const prompt = `Based on the following soil sensor data and fertilizer prediction, provide a comprehensive analysis and recommendations:
+
+Soil Data:
+Topsoil:
+- Temperature: ${data.topsoil.temperature}°C
+- Moisture: ${data.topsoil.moisture}%
+- pH: ${data.topsoil.ph}
+- Nitrogen: ${data.topsoil.nitrogen} mg/kg
+- Phosphorus: ${data.topsoil.phosphorus} mg/kg
+- Potassium: ${data.topsoil.potassium} mg/kg
+
+Subsoil:
+- Temperature: ${data.subsoil.temperature}°C
+- Moisture: ${data.subsoil.moisture}%
+- pH: ${data.subsoil.ph}
+- Nitrogen: ${data.subsoil.nitrogen} mg/kg
+- Phosphorus: ${data.subsoil.phosphorus} mg/kg
+- Potassium: ${data.subsoil.potassium} mg/kg
+
+Deepsoil:
+- Temperature: ${data.deepsoil.temperature}°C
+- Moisture: ${data.deepsoil.moisture}%
+- pH: ${data.deepsoil.ph}
+- Nitrogen: ${data.deepsoil.nitrogen} mg/kg
+- Phosphorus: ${data.deepsoil.phosphorus} mg/kg
+- Potassium: ${data.deepsoil.potassium} mg/kg
+
+Soil Type: ${['Clayey', 'Alluvial', 'Clay Loam', 'Coastal', 'Laterite', 'Sandy', 'Silty Clay'][data.soil_type]}
+Crop Type: ${['Coconut', 'Rice'][data.crop_type]}
+Predicted Fertilizer: ${fertilizer}
+
+Please provide:
+1. Analysis of current soil conditions
+2. Explanation of the fertilizer recommendation
+3. Specific actions to take
+4. Timeline for implementation
+5. Expected outcomes`
+
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+      setReport(response.text())
+    } catch (error) {
+      console.error('Error:', error)
+      setError(error instanceof Error ? error.message : 'Failed to generate report. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const onSubmit = async (data: FormData) => {
     setLoading(true)
     setError(null)
+    setReport(null)
     try {
       // Format the data according to the API requirements
       const formattedData = {
         topsoil: [
           data.topsoil.temperature,
           data.topsoil.moisture,
-          data.topsoil.ph
+          data.topsoil.ph,
+          data.topsoil.nitrogen,
+          data.topsoil.phosphorus,
+          data.topsoil.potassium
         ],
         subsoil: [
           data.subsoil.temperature,
           data.subsoil.moisture,
-          data.subsoil.ph
+          data.subsoil.ph,
+          data.subsoil.nitrogen,
+          data.subsoil.phosphorus,
+          data.subsoil.potassium
         ],
         deepsoil: [
           data.deepsoil.temperature,
           data.deepsoil.moisture,
-          data.deepsoil.ph
+          data.deepsoil.ph,
+          data.deepsoil.nitrogen,
+          data.deepsoil.phosphorus,
+          data.deepsoil.potassium
         ],
-        soilType: data.soilType,
-        cropType: data.cropType
+        soil_type: data.soil_type,
+        crop_type: data.crop_type
       }
 
       const response = await fetch(process.env.NEXT_PUBLIC_HF_API_URL!, {
@@ -123,60 +180,13 @@ export default function ManualEntry() {
       
       const result = await response.json()
       setPrediction(result.fertilizer)
-      setReport(null) // Clear any previous report
+      // Automatically generate report after getting prediction
+      await generateReport(data, result.fertilizer)
     } catch (error) {
       console.error('Error:', error)
       setError(error instanceof Error ? error.message : 'Failed to get prediction. Please try again.')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const generateReport = async () => {
-    if (!prediction) return
-
-    setGeneratingReport(true)
-    setError(null)
-    try {
-      const model = genAI.getGenerativeModel({ model: "gemini-pro" })
-      
-      const prompt = `Based on the following soil sensor data and fertilizer prediction, provide a comprehensive analysis and recommendations:
-
-Soil Data:
-Topsoil:
-- Temperature: ${watch('topsoil.temperature')}°C
-- Moisture: ${watch('topsoil.moisture')}%
-- pH: ${watch('topsoil.ph')}
-
-Subsoil:
-- Temperature: ${watch('subsoil.temperature')}°C
-- Moisture: ${watch('subsoil.moisture')}%
-- pH: ${watch('subsoil.ph')}
-
-Deepsoil:
-- Temperature: ${watch('deepsoil.temperature')}°C
-- Moisture: ${watch('deepsoil.moisture')}%
-- pH: ${watch('deepsoil.ph')}
-
-Soil Type: ${watch('soilType')}
-Crop Type: ${watch('cropType')}
-Predicted Fertilizer: ${prediction}
-
-Please provide:
-1. Analysis of current soil conditions
-2. Explanation of the fertilizer recommendation
-3. Specific actions to take
-4. Timeline for implementation
-5. Expected outcomes`
-
-      const result = await model.generateContent(prompt)
-      const response = await result.response
-      setReport(response.text())
-    } catch (error) {
-      console.error('Error:', error)
-      setError(error instanceof Error ? error.message : 'Failed to generate report. Please try again.')
-    } finally {
-      setGeneratingReport(false)
     }
   }
 
@@ -220,6 +230,42 @@ Please provide:
           />
           <span className="text-primary-500">{watch(`${prefix}.ph`)}</span>
         </div>
+        <div>
+          <label className="block mb-2">Nitrogen (mg/kg)</label>
+          <input
+            type="range"
+            min="0"
+            max="10"
+            step="0.1"
+            {...register(`${prefix}.nitrogen`)}
+            className="w-full"
+          />
+          <span className="text-primary-500">{watch(`${prefix}.nitrogen`)} mg/kg</span>
+        </div>
+        <div>
+          <label className="block mb-2">Phosphorus (mg/kg)</label>
+          <input
+            type="range"
+            min="0"
+            max="10"
+            step="0.1"
+            {...register(`${prefix}.phosphorus`)}
+            className="w-full"
+          />
+          <span className="text-primary-500">{watch(`${prefix}.phosphorus`)} mg/kg</span>
+        </div>
+        <div>
+          <label className="block mb-2">Potassium (mg/kg)</label>
+          <input
+            type="range"
+            min="0"
+            max="10"
+            step="0.1"
+            {...register(`${prefix}.potassium`)}
+            className="w-full"
+          />
+          <span className="text-primary-500">{watch(`${prefix}.potassium`)} mg/kg</span>
+        </div>
       </div>
     </div>
   )
@@ -249,26 +295,26 @@ Please provide:
               <div>
                 <label className="block mb-2">Soil Type</label>
                 <select
-                  {...register('soilType')}
+                  {...register('soil_type')}
                   className="w-full bg-dark-600 border border-dark-500 rounded-lg p-2"
                 >
-                  <option value="Clayey">Clayey</option>
-                  <option value="Alluvial">Alluvial</option>
-                  <option value="Clay Loam">Clay Loam</option>
-                  <option value="Coastal">Coastal</option>
-                  <option value="Laterite">Laterite</option>
-                  <option value="Sandy">Sandy</option>
-                  <option value="Silty Clay">Silty Clay</option>
+                  <option value="0">Clayey</option>
+                  <option value="1">Alluvial</option>
+                  <option value="2">Clay Loam</option>
+                  <option value="3">Coastal</option>
+                  <option value="4">Laterite</option>
+                  <option value="5">Sandy</option>
+                  <option value="6">Silty Clay</option>
                 </select>
               </div>
               <div>
                 <label className="block mb-2">Crop Type</label>
                 <select
-                  {...register('cropType')}
+                  {...register('crop_type')}
                   className="w-full bg-dark-600 border border-dark-500 rounded-lg p-2"
                 >
-                  <option value="Coconut">Coconut</option>
-                  <option value="Rice">Rice</option>
+                  <option value="0">Coconut</option>
+                  <option value="1">Rice</option>
                 </select>
               </div>
             </div>
@@ -279,7 +325,7 @@ Please provide:
             disabled={loading}
             className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50"
           >
-            {loading ? 'Predicting...' : 'Get Prediction'}
+            {loading ? 'Processing...' : 'Get Prediction & Report'}
           </button>
         </form>
 
@@ -291,26 +337,18 @@ Please provide:
         )}
 
         {prediction && (
-          <div className="mt-8 space-y-4">
-            <div className="bg-dark-700 p-6 rounded-xl">
-              <h2 className="text-2xl font-semibold mb-4">Prediction Result</h2>
-              <p className="text-primary-500 text-xl">{prediction}</p>
-            </div>
-
-            <button
-              onClick={generateReport}
-              disabled={generatingReport}
-              className="w-full bg-dark-600 hover:bg-dark-500 text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              <FaRobot />
-              {generatingReport ? 'Generating Report...' : 'Generate AI Report'}
-            </button>
+          <div className="mt-8 bg-dark-700 p-6 rounded-xl">
+            <h2 className="text-2xl font-semibold mb-4">Prediction Result</h2>
+            <p className="text-primary-500 text-xl">{prediction}</p>
           </div>
         )}
 
         {report && (
           <div className="mt-8 bg-dark-700 p-6 rounded-xl">
-            <h2 className="text-2xl font-semibold mb-4">AI Analysis Report</h2>
+            <div className="flex items-center gap-2 mb-4">
+              <FaFileAlt className="text-primary-500" />
+              <h2 className="text-2xl font-semibold">Comprehensive Report</h2>
+            </div>
             <div className="prose prose-invert max-w-none">
               {report.split('\n').map((paragraph, index) => (
                 <p key={index} className="mb-4">{paragraph}</p>
