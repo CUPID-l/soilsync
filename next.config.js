@@ -17,9 +17,6 @@ const nextConfig = {
     }
     return config
   },
-  experimental: {
-    serverActions: true,
-  },
   images: {
     domains: ['firebasestorage.googleapis.com'],
   },
