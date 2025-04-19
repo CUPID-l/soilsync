@@ -344,45 +344,32 @@ Please provide:
         )}
 
         {report && (
-          <div className="mt-8 bg-[#F1F8E9] p-8 rounded-xl border-2 border-[#81C784]">
-            {/* Decorative Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-[32px] font-bold text-[#2E7D32] mb-2">Comprehensive Report</h1>
-              <h2 className="text-[22px] text-[#43A047]">Analysis of Coconut Soil Conditions and Fertilizer Recommendation</h2>
-              <div className="h-[2px] w-24 bg-[#81C784] mx-auto mt-4"></div>
+          <div className="mt-8 bg-dark-700 p-8 rounded-xl">
+            <div className="flex items-center gap-3 mb-8">
+              <FaFileAlt className="text-primary-500 text-3xl" />
+              <h2 className="text-3xl font-bold">Comprehensive Report</h2>
             </div>
-
-            {/* Key Findings Box */}
-            <div className="bg-white p-6 rounded-lg border border-[#81C784] mb-8">
-              <h3 className="text-[18px] font-semibold text-[#43A047] mb-4">Key Findings</h3>
-              <ul className="space-y-2">
-                <li className="flex items-start">
-                  <span className="text-[#43A047] mr-2">•</span>
-                  <span className="text-[#333333]">Uniform soil profile across all layers with ideal pH of 7</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-[#43A047] mr-2">•</span>
-                  <span className="text-[#333333]">Significant nutrient deficiencies in N, P, and K (5 mg/kg each)</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-[#43A047] mr-2">•</span>
-                  <span className="text-[#333333]">Clayey soil type requires careful moisture management</span>
-                </li>
-              </ul>
-            </div>
-
             <div className="prose prose-invert max-w-none">
               {report.split('\n').map((paragraph, index) => {
                 // Skip empty lines
                 if (!paragraph.trim()) return null
+
+                // Handle main title
+                if (paragraph.startsWith('## ')) {
+                  return (
+                    <h1 key={index} className="text-4xl font-bold text-primary-400 mb-8">
+                      {paragraph.replace('## ', '')}
+                    </h1>
+                  )
+                }
 
                 // Handle section titles (1., 2., etc.)
                 if (paragraph.match(/^\d+\./)) {
                   const title = paragraph.replace(/\*\*/g, '').replace(':', '').trim()
                   return (
                     <div key={index} className="mt-12 mb-6">
-                      <h2 className="text-[24px] font-bold text-[#2E7D32]">{title}</h2>
-                      <div className="h-[1px] w-full bg-[#E0E0E0] mt-2 mb-6"></div>
+                      <h2 className="text-2xl font-bold text-primary-400">{title}</h2>
+                      <div className="h-1 w-24 bg-primary-500 mt-2 mb-6"></div>
                     </div>
                   )
                 }
@@ -393,8 +380,8 @@ Please provide:
                   if (content) {
                     return (
                       <div key={index} className="mb-6">
-                        <h3 className="text-[18px] font-semibold text-[#43A047] mb-3">{title}:</h3>
-                        <p className="text-[#333333] ml-6 leading-relaxed">{content.trim()}</p>
+                        <h3 className="text-xl font-semibold text-primary-400 mb-3">{title}:</h3>
+                        <p className="text-gray-300 ml-6">{content.trim()}</p>
                       </div>
                     )
                   }
@@ -405,8 +392,8 @@ Please provide:
                   const content = paragraph.replace('* ', '').replace(/\*\*/g, '').trim()
                   return (
                     <div key={index} className="flex items-start mb-4">
-                      <span className="text-[#43A047] mr-2 mt-1">•</span>
-                      <p className="text-[#333333] leading-relaxed">{content}</p>
+                      <div className="w-2 h-2 rounded-full bg-primary-500 mt-2 mr-3"></div>
+                      <p className="text-gray-300">{content}</p>
                     </div>
                   )
                 }
@@ -414,9 +401,9 @@ Please provide:
                 // Handle important note
                 if (paragraph.startsWith('Important Note:')) {
                   return (
-                    <div key={index} className="mt-12 pt-6 border-t border-[#E0E0E0]">
-                      <h3 className="text-[18px] font-semibold text-[#43A047] mb-4">Important Note</h3>
-                      <p className="text-[#333333] leading-relaxed">
+                    <div key={index} className="mt-12 pt-6 border-t border-dark-500">
+                      <h3 className="text-xl font-semibold text-primary-400 mb-4">Important Note</h3>
+                      <p className="text-gray-300">
                         {paragraph.replace('Important Note:', '').trim()}
                       </p>
                     </div>
@@ -425,18 +412,16 @@ Please provide:
 
                 // Regular paragraphs
                 return (
-                  <p key={index} className="text-[#333333] mb-6 leading-relaxed text-[16px]">
-                    {paragraph}
+                  <p key={index} className="text-gray-300 mb-6 leading-relaxed">
+                    {paragraph.replace(/\*\*/g, '')}
                   </p>
                 )
               })}
             </div>
-
-            {/* Footer */}
-            <div className="mt-12 pt-6 border-t border-[#E0E0E0]">
-              <div className="flex items-center justify-between text-[14px] text-[#666666]">
-                <span>Generated by SoilSync AI</span>
-                <span>{new Date().toLocaleDateString()}</span>
+            <div className="mt-12 pt-6 border-t border-dark-500">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-400">Generated by SoilSync AI</span>
+                <span className="text-sm text-gray-400">{new Date().toLocaleDateString()}</span>
               </div>
             </div>
           </div>
