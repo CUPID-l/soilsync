@@ -3,27 +3,9 @@
 import { useState, useEffect } from 'react'
 import { FaArrowLeft, FaChartLine, FaFileAlt } from 'react-icons/fa'
 import Link from 'next/link'
-import { initializeApp } from 'firebase/app'
-import { getDatabase, ref, onValue } from 'firebase/database'
+import { database } from '@/lib/firebase'
+import { ref, onValue } from 'firebase/database'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-
-// Initialize Firebase
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-}
-
-// Verify Firebase configuration
-if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) {
-  console.error('Firebase configuration is incomplete. Please check your environment variables.')
-}
-
-const app = initializeApp(firebaseConfig)
-const database = getDatabase(app)
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!)
@@ -39,22 +21,27 @@ export default function AutomaticReport() {
     const sensorRef = ref(database, 'sensors')
     const unsubscribe = onValue(sensorRef, 
       (snapshot) => {
-        const data = snapshot.val()
-        if (data) {
-          // Validate data structure
-          if (!data.topsoil || !data.subsoil || !data.deepsoil) {
-            setError('Invalid sensor data structure received from Firebase')
-            return
+        try {
+          const data = snapshot.val()
+          if (data) {
+            // Validate data structure
+            if (!data.topsoil || !data.subsoil || !data.deepsoil) {
+              setError('Invalid sensor data structure received from Firebase')
+              return
+            }
+            setSensorData(data)
+            setError(null)
+          } else {
+            setError('No sensor data available')
           }
-          setSensorData(data)
-          setError(null)
-        } else {
-          setError('No sensor data available')
+        } catch (error) {
+          console.error('Error processing sensor data:', error)
+          setError('Error processing sensor data. Please try again.')
         }
       },
       (error) => {
         console.error('Firebase error:', error)
-        setError('Failed to connect to Firebase. Please check your connection.')
+        setError('Failed to connect to Firebase. Please check your connection and try again.')
       }
     )
 
