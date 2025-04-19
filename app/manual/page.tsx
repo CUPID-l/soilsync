@@ -363,48 +363,39 @@ Please provide:
                   )
                 }
 
-                // Handle section titles
+                // Handle section titles (1., 2., etc.)
                 if (paragraph.match(/^\d+\./)) {
                   return (
                     <h2 key={index} className="text-2xl font-semibold text-primary-400 mt-8 mb-4">
-                      {paragraph}
+                      {paragraph.replace('::', '')}
                     </h2>
                   )
                 }
 
-                // Handle subheadings (like Nitrogen (N):)
+                // Handle subheadings in Specific Actions
                 if (paragraph.startsWith('**') && paragraph.endsWith(':**')) {
                   const title = paragraph.replace(/\*\*/g, '').replace(':**', '')
                   return (
                     <h3 key={index} className="text-xl font-semibold text-primary-400 mt-4 mb-2">
-                      {title}:
+                      {title}
                     </h3>
                   )
                 }
 
-                // Handle bullet points
-                if (paragraph.startsWith('* ')) {
-                  return (
-                    <li key={index} className="ml-6 text-gray-300 mb-2 list-disc">
-                      {paragraph.replace('* ', '')}
-                    </li>
-                  )
-                }
-
-                // Handle timeline items
-                if (paragraph.startsWith('* **')) {
-                  const [time, content] = paragraph.replace('* **', '').split(':**')
+                // Handle bullet points in Timeline
+                if (paragraph.startsWith('**') && paragraph.includes(':**')) {
+                  const [title, content] = paragraph.replace(/\*\*/g, '').split(':**')
                   return (
                     <div key={index} className="ml-6 mb-4">
-                      <span className="font-semibold text-primary-400">{time}:</span>
+                      <span className="font-semibold text-primary-400">{title}:</span>
                       <span className="text-gray-300 ml-2">{content}</span>
                     </div>
                   )
                 }
 
-                // Handle expected outcomes
-                if (paragraph.startsWith('* **')) {
-                  const content = paragraph.replace('* **', '').replace('**', '')
+                // Handle bullet points in Expected Outcomes
+                if (paragraph.startsWith('**')) {
+                  const content = paragraph.replace(/\*\*/g, '')
                   return (
                     <li key={index} className="ml-6 text-gray-300 mb-2 list-disc">
                       {content}
