@@ -364,12 +364,21 @@ Please provide:
                 }
 
                 // Handle section titles
-                if (paragraph.startsWith('**')) {
-                  const title = paragraph.replace(/\*\*/g, '')
+                if (paragraph.match(/^\d+\./)) {
                   return (
                     <h2 key={index} className="text-2xl font-semibold text-primary-400 mt-8 mb-4">
-                      {title}
+                      {paragraph}
                     </h2>
+                  )
+                }
+
+                // Handle subheadings (like Nitrogen (N):)
+                if (paragraph.startsWith('**') && paragraph.endsWith(':**')) {
+                  const title = paragraph.replace(/\*\*/g, '').replace(':**', '')
+                  return (
+                    <h3 key={index} className="text-xl font-semibold text-primary-400 mt-4 mb-2">
+                      {title}:
+                    </h3>
                   )
                 }
 
@@ -403,13 +412,13 @@ Please provide:
                   )
                 }
 
-                // Handle disclaimer
-                if (paragraph.startsWith('**Disclaimer:**')) {
+                // Handle important note
+                if (paragraph.startsWith('Important Note:')) {
                   return (
                     <div key={index} className="mt-8 pt-4 border-t border-dark-500">
-                      <h3 className="text-lg font-semibold text-primary-400 mb-2">Disclaimer</h3>
+                      <h3 className="text-lg font-semibold text-primary-400 mb-2">Important Note</h3>
                       <p className="text-gray-300">
-                        {paragraph.replace('**Disclaimer:**', '')}
+                        {paragraph.replace('Important Note:', '')}
                       </p>
                     </div>
                   )
