@@ -114,11 +114,34 @@ export default function AutomaticReport() {
         potassium: sensorData.potassium
       })
 
-      const report = await generateReport(sensorData, prediction)
-      setReport(report)
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
+      
+      const prompt = `Based on the following soil sensor readings and recommended fertilizer, generate a detailed report:
+      
+      Soil Data:
+      - Temperature: ${sensorData.temperature}°C
+      - Humidity: ${sensorData.humidity}%
+      - Moisture: ${sensorData.moisture}%
+      - pH: ${sensorData.ph}
+      - Nitrogen: ${sensorData.nitrogen} ppm
+      - Phosphorus: ${sensorData.phosphorus} ppm
+      - Potassium: ${sensorData.potassium} ppm
+      
+      Recommended Fertilizer: ${prediction}
+      
+      Please provide a comprehensive report including:
+      1. Current Soil Conditions Analysis
+      2. Fertilizer Explanation
+      3. Specific Actions to Take
+      4. Implementation Timeline
+      5. Expected Outcomes`
+
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+      setReport(response.text())
     } catch (error) {
       console.error('Error generating report:', error)
-      setError('Failed to generate report. Please try again later.')
+      setError(error instanceof Error ? error.message : 'Failed to generate report. Please try again later.')
     } finally {
       setLoading(false)
     }
