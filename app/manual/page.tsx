@@ -367,38 +367,26 @@ Please provide:
                 if (paragraph.match(/^\d+\./)) {
                   return (
                     <h2 key={index} className="text-2xl font-semibold text-primary-400 mt-8 mb-4">
-                      {paragraph.replace('::', '')}
+                      {paragraph.replace(':', '')}
                     </h2>
                   )
                 }
 
-                // Handle subheadings in Specific Actions
-                if (paragraph.startsWith('**') && paragraph.endsWith(':**')) {
-                  const title = paragraph.replace(/\*\*/g, '').replace(':**', '')
-                  return (
-                    <h3 key={index} className="text-xl font-semibold text-primary-400 mt-4 mb-2">
-                      {title}
-                    </h3>
-                  )
-                }
-
-                // Handle bullet points in Timeline
-                if (paragraph.startsWith('**') && paragraph.includes(':**')) {
-                  const [title, content] = paragraph.replace(/\*\*/g, '').split(':**')
-                  return (
-                    <div key={index} className="ml-6 mb-4">
-                      <span className="font-semibold text-primary-400">{title}:</span>
-                      <span className="text-gray-300 ml-2">{content}</span>
-                    </div>
-                  )
-                }
-
-                // Handle bullet points in Expected Outcomes
-                if (paragraph.startsWith('**')) {
-                  const content = paragraph.replace(/\*\*/g, '')
+                // Handle bullet points with ** markers
+                if (paragraph.startsWith('* **')) {
+                  const content = paragraph.replace('* **', '').replace('**', '')
                   return (
                     <li key={index} className="ml-6 text-gray-300 mb-2 list-disc">
                       {content}
+                    </li>
+                  )
+                }
+
+                // Handle regular bullet points
+                if (paragraph.startsWith('* ')) {
+                  return (
+                    <li key={index} className="ml-6 text-gray-300 mb-2 list-disc">
+                      {paragraph.replace('* ', '')}
                     </li>
                   )
                 }
