@@ -9,8 +9,16 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getPrediction } from '@/lib/prediction'
 import { generateReport } from '@/lib/report'
 
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!)
+// Initialize Gemini with error handling
+let genAI: GoogleGenerativeAI | null = null
+try {
+  if (!process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
+    throw new Error('Gemini API key is not set')
+  }
+  genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY)
+} catch (error) {
+  console.error('Failed to initialize Gemini:', error)
+}
 
 interface SensorData {
   temperature: number
@@ -31,32 +39,47 @@ export default function AutomaticReport() {
 
   useEffect(() => {
     if (!db) {
-      setError('Firebase is not initialized')
+      setError('Firebase is not initialized. Please check your Firebase configuration.')
       setLoading(false)
       return
     }
 
-    const sensorRef = collection(db, 'sensors')
-    const unsubscribe = onSnapshot(sensorRef, (snapshot) => {
-      const data = snapshot.docs.map(doc => doc.data() as SensorData)
-      if (data.length > 0) {
-        setSensorData(data[0])
-        setError(null)
-      } else {
-        setError('No sensor data available')
-      }
-      setLoading(false)
-    }, (error) => {
-      setError('Failed to fetch sensor data')
-      setLoading(false)
-    })
+    try {
+      const sensorRef = collection(db, 'sensors')
+      const unsubscribe = onSnapshot(sensorRef, 
+        (snapshot) => {
+          const data = snapshot.docs.map(doc => doc.data() as SensorData)
+          if (data.length > 0) {
+            setSensorData(data[0])
+            setError(null)
+          } else {
+            setError('No sensor data available. Please check if sensors are connected.')
+          }
+          setLoading(false)
+        },
+        (error) => {
+          console.error('Firestore error:', error)
+          setError('Failed to fetch sensor data. Please try again later.')
+          setLoading(false)
+        }
+      )
 
-    return () => unsubscribe()
+      return () => unsubscribe()
+    } catch (error) {
+      console.error('Error setting up Firestore listener:', error)
+      setError('Failed to connect to database. Please try again later.')
+      setLoading(false)
+    }
   }, [])
 
   const handleGenerateReport = async () => {
     if (!sensorData) {
       setError('No sensor data available')
+      return
+    }
+
+    if (!genAI) {
+      setError('AI service is not available. Please check your configuration.')
       return
     }
 
@@ -77,7 +100,8 @@ export default function AutomaticReport() {
       const report = await generateReport(sensorData, prediction)
       setReport(report)
     } catch (error) {
-      setError('Failed to generate report')
+      console.error('Error generating report:', error)
+      setError('Failed to generate report. Please try again later.')
     } finally {
       setLoading(false)
     }
@@ -148,7 +172,7 @@ export default function AutomaticReport() {
 
         <button
           onClick={handleGenerateReport}
-          disabled={!sensorData || loading}
+          disabled={!sensorData || loading || !genAI}
           className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg mb-8 disabled:opacity-50"
         >
           Generate Report
