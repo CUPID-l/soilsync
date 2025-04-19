@@ -344,10 +344,10 @@ Please provide:
         )}
 
         {report && (
-          <div className="mt-8 bg-dark-700 p-6 rounded-xl">
-            <div className="flex items-center gap-2 mb-6">
-              <FaFileAlt className="text-primary-500 text-2xl" />
-              <h2 className="text-2xl font-semibold">Comprehensive Report</h2>
+          <div className="mt-8 bg-dark-700 p-8 rounded-xl">
+            <div className="flex items-center gap-3 mb-8">
+              <FaFileAlt className="text-primary-500 text-3xl" />
+              <h2 className="text-3xl font-bold">Comprehensive Report</h2>
             </div>
             <div className="prose prose-invert max-w-none">
               {report.split('\n').map((paragraph, index) => {
@@ -357,7 +357,7 @@ Please provide:
                 // Handle main title
                 if (paragraph.startsWith('## ')) {
                   return (
-                    <h1 key={index} className="text-3xl font-bold text-primary-400 mb-6">
+                    <h1 key={index} className="text-4xl font-bold text-primary-400 mb-8">
                       {paragraph.replace('## ', '')}
                     </h1>
                   )
@@ -365,11 +365,11 @@ Please provide:
 
                 // Handle section titles (1., 2., etc.)
                 if (paragraph.match(/^\d+\./)) {
-                  const title = paragraph.replace(/\*\*/g, '').replace(':', '')
+                  const title = paragraph.replace(/\*\*/g, '').replace(':', '').trim()
                   return (
-                    <div key={index} className="mt-8 mb-4">
-                      <h2 className="text-2xl font-semibold text-primary-400">{title}</h2>
-                      <div className="h-1 w-20 bg-primary-500 mt-2 mb-4"></div>
+                    <div key={index} className="mt-12 mb-6">
+                      <h2 className="text-2xl font-bold text-primary-400">{title}</h2>
+                      <div className="h-1 w-24 bg-primary-500 mt-2 mb-6"></div>
                     </div>
                   )
                 }
@@ -379,31 +379,32 @@ Please provide:
                   const [title, content] = paragraph.split(':')
                   if (content) {
                     return (
-                      <div key={index} className="mb-4">
-                        <h3 className="text-xl font-semibold text-primary-400 mb-2">{title}:</h3>
-                        <p className="text-gray-300 ml-4">{content.trim()}</p>
+                      <div key={index} className="mb-6">
+                        <h3 className="text-xl font-semibold text-primary-400 mb-3">{title}:</h3>
+                        <p className="text-gray-300 ml-6">{content.trim()}</p>
                       </div>
                     )
                   }
                 }
 
-                // Handle bullet points in Expected Outcomes
+                // Handle bullet points in Specific Actions and Timeline
                 if (paragraph.startsWith('* ')) {
-                  const content = paragraph.replace('* ', '')
+                  const content = paragraph.replace('* ', '').replace(/\*\*/g, '').trim()
                   return (
-                    <li key={index} className="ml-6 text-gray-300 mb-2 list-disc">
-                      {content}
-                    </li>
+                    <div key={index} className="flex items-start mb-4">
+                      <div className="w-2 h-2 rounded-full bg-primary-500 mt-2 mr-3"></div>
+                      <p className="text-gray-300">{content}</p>
+                    </div>
                   )
                 }
 
                 // Handle important note
                 if (paragraph.startsWith('Important Note:')) {
                   return (
-                    <div key={index} className="mt-8 pt-4 border-t border-dark-500">
-                      <h3 className="text-lg font-semibold text-primary-400 mb-2">Important Note</h3>
+                    <div key={index} className="mt-12 pt-6 border-t border-dark-500">
+                      <h3 className="text-xl font-semibold text-primary-400 mb-4">Important Note</h3>
                       <p className="text-gray-300">
-                        {paragraph.replace('Important Note:', '')}
+                        {paragraph.replace('Important Note:', '').trim()}
                       </p>
                     </div>
                   )
@@ -411,13 +412,13 @@ Please provide:
 
                 // Regular paragraphs
                 return (
-                  <p key={index} className="text-gray-300 mb-4">
+                  <p key={index} className="text-gray-300 mb-6 leading-relaxed">
                     {paragraph}
                   </p>
                 )
               })}
             </div>
-            <div className="mt-6 pt-6 border-t border-dark-500">
+            <div className="mt-12 pt-6 border-t border-dark-500">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">Generated by SoilSync AI</span>
                 <span className="text-sm text-gray-400">{new Date().toLocaleDateString()}</span>
