@@ -365,28 +365,34 @@ Please provide:
 
                 // Handle section titles (1., 2., etc.)
                 if (paragraph.match(/^\d+\./)) {
+                  const title = paragraph.replace(/\*\*/g, '').replace(':', '')
                   return (
-                    <h2 key={index} className="text-2xl font-semibold text-primary-400 mt-8 mb-4">
-                      {paragraph.replace(':', '')}
-                    </h2>
+                    <div key={index} className="mt-8 mb-4">
+                      <h2 className="text-2xl font-semibold text-primary-400">{title}</h2>
+                      <div className="h-1 w-20 bg-primary-500 mt-2 mb-4"></div>
+                    </div>
                   )
                 }
 
-                // Handle bullet points with ** markers
-                if (paragraph.startsWith('* **')) {
-                  const content = paragraph.replace('* **', '').replace('**', '')
+                // Handle subheadings in Specific Actions and Timeline
+                if (paragraph.includes(':')) {
+                  const [title, content] = paragraph.split(':')
+                  if (content) {
+                    return (
+                      <div key={index} className="mb-4">
+                        <h3 className="text-xl font-semibold text-primary-400 mb-2">{title}:</h3>
+                        <p className="text-gray-300 ml-4">{content.trim()}</p>
+                      </div>
+                    )
+                  }
+                }
+
+                // Handle bullet points in Expected Outcomes
+                if (paragraph.startsWith('* ')) {
+                  const content = paragraph.replace('* ', '')
                   return (
                     <li key={index} className="ml-6 text-gray-300 mb-2 list-disc">
                       {content}
-                    </li>
-                  )
-                }
-
-                // Handle regular bullet points
-                if (paragraph.startsWith('* ')) {
-                  return (
-                    <li key={index} className="ml-6 text-gray-300 mb-2 list-disc">
-                      {paragraph.replace('* ', '')}
                     </li>
                   )
                 }
