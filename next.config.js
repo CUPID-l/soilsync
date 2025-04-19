@@ -16,12 +16,10 @@ const nextConfig = {
       }
     }
 
-    // Fix for undici package
+    // Exclude undici from processing
     config.module.rules.push({
-      test: /\.m?js/,
-      resolve: {
-        fullySpecified: false
-      }
+      test: /node_modules[\\/]undici/,
+      use: 'null-loader'
     })
 
     return config
