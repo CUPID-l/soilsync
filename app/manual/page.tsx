@@ -345,19 +345,11 @@ Please provide:
 
         {report && (
           <div className="mt-8 bg-[#F1F8E9] p-8 rounded-xl border-2 border-[#81C784]">
-            {/* Header Section */}
+            {/* Decorative Header */}
             <div className="text-center mb-8">
-              <img 
-                src="/soilsync-logo.png" 
-                alt="SoilSync Logo" 
-                className="mx-auto w-[120px] mb-6"
-              />
-              <h1 className="text-[32px] font-bold text-[#2E7D32] mb-2">
-                Comprehensive Report
-              </h1>
-              <h2 className="text-[22px] text-[#43A047]">
-                Analysis of Coconut Soil Conditions and Fertilizer Recommendation
-              </h2>
+              <h1 className="text-[32px] font-bold text-[#2E7D32] mb-2">Comprehensive Report</h1>
+              <h2 className="text-[22px] text-[#43A047]">Analysis of Coconut Soil Conditions and Fertilizer Recommendation</h2>
+              <div className="h-[2px] w-24 bg-[#81C784] mx-auto mt-4"></div>
             </div>
 
             {/* Key Findings Box */}
@@ -366,19 +358,15 @@ Please provide:
               <ul className="space-y-2">
                 <li className="flex items-start">
                   <span className="text-[#43A047] mr-2">•</span>
-                  <span className="text-[#333333]">Uniform soil profile across all layers</span>
+                  <span className="text-[#333333]">Uniform soil profile across all layers with ideal pH of 7</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-[#43A047] mr-2">•</span>
-                  <span className="text-[#333333]">Significant nutrient deficiencies (N, P, K)</span>
+                  <span className="text-[#333333]">Significant nutrient deficiencies in N, P, and K (5 mg/kg each)</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-[#43A047] mr-2">•</span>
-                  <span className="text-[#333333]">Ideal pH level of 7 for coconut growth</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-[#43A047] mr-2">•</span>
-                  <span className="text-[#333333]">Clayey soil type requiring careful moisture management</span>
+                  <span className="text-[#333333]">Clayey soil type requires careful moisture management</span>
                 </li>
               </ul>
             </div>
@@ -394,31 +382,31 @@ Please provide:
                   return (
                     <div key={index} className="mt-12 mb-6">
                       <h2 className="text-[24px] font-bold text-[#2E7D32]">{title}</h2>
-                      <div className="h-[1px] w-full bg-[#E0E0E0] my-4"></div>
+                      <div className="h-[1px] w-full bg-[#E0E0E0] mt-2 mb-6"></div>
                     </div>
                   )
                 }
 
-                // Handle subheadings
+                // Handle subheadings in Specific Actions and Timeline
                 if (paragraph.includes(':')) {
                   const [title, content] = paragraph.split(':')
                   if (content) {
                     return (
                       <div key={index} className="mb-6">
                         <h3 className="text-[18px] font-semibold text-[#43A047] mb-3">{title}:</h3>
-                        <p className="text-[#333333] ml-6 leading-[1.5]">{content.trim()}</p>
+                        <p className="text-[#333333] ml-6 leading-relaxed">{content.trim()}</p>
                       </div>
                     )
                   }
                 }
 
-                // Handle bullet points
+                // Handle bullet points in Specific Actions and Timeline
                 if (paragraph.startsWith('* ')) {
                   const content = paragraph.replace('* ', '').replace(/\*\*/g, '').trim()
                   return (
                     <div key={index} className="flex items-start mb-4">
-                      <span className="text-[#43A047] mr-2 mt-2">•</span>
-                      <p className="text-[#333333] leading-[1.5]">{content}</p>
+                      <span className="text-[#43A047] mr-2 mt-1">•</span>
+                      <p className="text-[#333333] leading-relaxed">{content}</p>
                     </div>
                   )
                 }
@@ -428,7 +416,7 @@ Please provide:
                   return (
                     <div key={index} className="mt-12 pt-6 border-t border-[#E0E0E0]">
                       <h3 className="text-[18px] font-semibold text-[#43A047] mb-4">Important Note</h3>
-                      <p className="text-[#333333] leading-[1.5]">
+                      <p className="text-[#333333] leading-relaxed">
                         {paragraph.replace('Important Note:', '').trim()}
                       </p>
                     </div>
@@ -437,7 +425,7 @@ Please provide:
 
                 // Regular paragraphs
                 return (
-                  <p key={index} className="text-[#333333] mb-6 leading-[1.5] text-[16px]">
+                  <p key={index} className="text-[#333333] mb-6 leading-relaxed text-[16px]">
                     {paragraph}
                   </p>
                 )
