@@ -61,7 +61,7 @@ export default function AutomaticReport() {
         setFirebaseInitialized(true)
         console.log('Firebase initialized, setting up Firestore listeners')
 
-        // Set up listeners for all three layers
+        // Set up listeners for all three layers with exact collection names
         const topLayerRef = collection(db, 'top_layer')
         const midLayerRef = collection(db, 'mid_layer')
         const bottomLayerRef = collection(db, 'bottom_layer')
@@ -75,6 +75,10 @@ export default function AutomaticReport() {
             if (data.length > 0) {
               console.log('Setting top layer data:', data[0])
               setSoilLayers(prev => ({ ...prev, top_layer: data[0] }))
+              setError(null)
+            } else {
+              console.log('No top layer data available')
+              setError('No top layer data available. Please check if sensors are connected.')
             }
           },
           (error) => {
@@ -90,6 +94,10 @@ export default function AutomaticReport() {
             if (data.length > 0) {
               console.log('Setting mid layer data:', data[0])
               setSoilLayers(prev => ({ ...prev, mid_layer: data[0] }))
+              setError(null)
+            } else {
+              console.log('No mid layer data available')
+              setError('No mid layer data available. Please check if sensors are connected.')
             }
           },
           (error) => {
@@ -105,6 +113,10 @@ export default function AutomaticReport() {
             if (data.length > 0) {
               console.log('Setting bottom layer data:', data[0])
               setSoilLayers(prev => ({ ...prev, bottom_layer: data[0] }))
+              setError(null)
+            } else {
+              console.log('No bottom layer data available')
+              setError('No bottom layer data available. Please check if sensors are connected.')
             }
           },
           (error) => {
