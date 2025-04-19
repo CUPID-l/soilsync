@@ -15,6 +15,15 @@ const nextConfig = {
         'firebase-admin': false,
       }
     }
+
+    // Fix for undici package
+    config.module.rules.push({
+      test: /\.m?js/,
+      resolve: {
+        fullySpecified: false
+      }
+    })
+
     return config
   },
   images: {
