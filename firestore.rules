@@ -24,21 +24,25 @@ service cloud.firestore {
       request.resource.data.timestamp is number;
     }
 
-    // Rules for the sensors collection
-    match /sensors/{sensorId} {
-      // Allow read access to all users
+    // Rules for the soil layer collections
+    match /top_layer/{document=**} {
       allow read: if true;
-      
-      // Allow write access only to authenticated users with valid data
+      allow write: if request.auth != null && isValidSensorData();
+    }
+
+    match /mid_layer/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null && isValidSensorData();
+    }
+
+    match /bottom_layer/{document=**} {
+      allow read: if true;
       allow write: if request.auth != null && isValidSensorData();
     }
 
     // Rules for the reports collection (if you plan to store reports)
     match /reports/{reportId} {
-      // Allow read access to all users
       allow read: if true;
-      
-      // Allow write access only to authenticated users
       allow write: if request.auth != null;
     }
   }
